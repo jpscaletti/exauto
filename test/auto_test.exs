@@ -46,29 +46,30 @@ defmodule AutoTest do
     base_key = "test:1"
     Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
     Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "Greenish Rainforest", 3, {3, "Greenish Rainforest"})
+    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
 
     assert Auto.match(base_key, "rain") |> Enum.count() == 3
-    assert Auto.match(base_key, "green") |> Enum.count() == 1
+    assert Auto.match(base_key, "he") |> Enum.count() == 2
+    assert Auto.match(base_key, "forest") |> Enum.count() == 1
     assert Auto.match(base_key, "man") |> Enum.count() == 1
-    assert List.first(Auto.match(base_key, "man")) == {2, "Rainman"}
+    assert Auto.match(base_key, "man") == [{2, "Rainman"}]
   end
 
   test "multiple words matching" do
     base_key = "test:1"
     Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
     Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "Greenish Rainforest", 3, {3, "Greenish Rainforest"})
+    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
 
-    assert List.first(Auto.match(base_key, "green forest")) == {3, "Greenish Rainforest"}
+    assert Auto.match(base_key, "the forest") == [{3, "The Rainforest"}]
   end
 
   test "ignore short words, match the rest" do
     base_key = "test:1"
     Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
     Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "Greenish Rainforest", 3, {3, "Greenish Rainforest"})
+    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
 
-    assert Auto.match(base_key, "e i man") |> Enum.count() == 1
+    assert Auto.match(base_key, "e i man o") |> Enum.count() == 1
   end
 end
