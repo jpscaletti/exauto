@@ -3,7 +3,7 @@ defmodule AutoTest do
   doctest Auto
 
   setup do
-    Redix.command(:redix, ["FLUSHDB"])
+    Redix.command(:redix, ["FLUSHALL"])
     :ok
   end
 
@@ -42,11 +42,45 @@ defmodule AutoTest do
     assert data == :erlang.binary_to_term(encoded)
   end
 
+  test "insert in batch" do
+    base_key = "test:1"
+
+    [
+      ["Edge of Tomorow", 1, :data1],
+      ["Rainman", 2, :data2],
+      ["Mission Impossible", 3, :data3]
+    ]
+    |> Auto.insert(base_key)
+
+    assert Redix.command!(:redix, ["EXISTS", base_key, "1"])
+    assert Redix.command!(:redix, ["EXISTS", base_key, "2"])
+    assert Redix.command!(:redix, ["EXISTS", base_key, "3"])
+  end
+
+  test "insert from stream" do
+    base_key = "test:1"
+
+    Stream.uniq([
+      ["Edge of Tomorow", 1, :data1],
+      ["Rainman", 2, :data2],
+      ["Mission Impossible", 3, :data3]
+    ])
+    |> Auto.insert(base_key)
+
+    assert Redix.command!(:redix, ["EXISTS", base_key, "1"])
+    assert Redix.command!(:redix, ["EXISTS", base_key, "2"])
+    assert Redix.command!(:redix, ["EXISTS", base_key, "3"])
+  end
+
   test "single word matching" do
     base_key = "test:1"
-    Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
-    Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
+
+    [
+      ["The Rain", 1, {1, "The Rain"}],
+      ["Rainman", 2, {2, "Rainman"}],
+      ["The Rainforest", 3, {3, "The Rainforest"}]
+    ]
+    |> Auto.insert(base_key)
 
     assert Auto.match(base_key, "rain") |> Enum.count() == 3
     assert Auto.match(base_key, "he") |> Enum.count() == 2
@@ -57,18 +91,26 @@ defmodule AutoTest do
 
   test "multiple words matching" do
     base_key = "test:1"
-    Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
-    Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
+
+    [
+      ["The Rain", 1, {1, "The Rain"}],
+      ["Rainman", 2, {2, "Rainman"}],
+      ["The Rainforest", 3, {3, "The Rainforest"}]
+    ]
+    |> Auto.insert(base_key)
 
     assert Auto.match(base_key, "the forest") == [{3, "The Rainforest"}]
   end
 
   test "ignore short words, match the rest" do
     base_key = "test:1"
-    Auto.insert(base_key, "The Rain", 1, {1, "The Rain"})
-    Auto.insert(base_key, "Rainman", 2, {2, "Rainman"})
-    Auto.insert(base_key, "The Rainforest", 3, {3, "The Rainforest"})
+
+    [
+      ["The Rain", 1, {1, "The Rain"}],
+      ["Rainman", 2, {2, "Rainman"}],
+      ["The Rainforest", 3, {3, "The Rainforest"}]
+    ]
+    |> Auto.insert(base_key)
 
     assert Auto.match(base_key, "e i man o") |> Enum.count() == 1
   end

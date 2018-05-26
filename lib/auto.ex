@@ -1,6 +1,7 @@
 defmodule Auto do
   @min_length 2
   @cache_time 600
+  @chunk_every 100
 
   defp normalize(term) do
     term
@@ -65,16 +66,36 @@ defmodule Auto do
 
   # ---------------------------------------------------------------------------
 
+  @doc """
+  Process and insert terms from a stream or an enumerable of terms with the
+  format `[term, id, data]` into Redis.
+
+  It generates and send the insertion commands of `@chunk_every` terms
+  each time.
+  """
+  def insert(stream_or_enumerable, base_key) do
+    stream_or_enumerable
+    |> Stream.chunk_every(@chunk_every)
+    |> Stream.map(fn items ->
+      cmds = Enum.reduce(items, [], fn item, acc -> insert_cmds(base_key, item, acc) end)
+      Redix.pipeline!(:redix, cmds)
+    end)
+    |> Stream.run()
+  end
+
+  @doc """
+  Process and insert one term into Redis.
+  """
   def insert(base_key, text, id, data) do
-    cmds = insert_cmds(base_key, text, id, data)
+    cmds = insert_cmds(base_key, [text, id, data])
     Redix.pipeline!(:redix, cmds)
   end
 
-  def insert_cmds(base_key, text, id, data) do
+  defp insert_cmds(base_key, [text, id, data], acc \\ []) do
     text
     |> normalize
     |> split
-    |> insert_term_cmds(base_key, id, [])
+    |> insert_term_cmds(base_key, id, acc)
     |> Enum.concat([["HSET", base_key, id, encode(data)]])
   end
 
@@ -132,5 +153,19 @@ defmodule Auto do
   defp get_data(key, ids) when is_list(ids) do
     Redix.command!(:redix, ["HMGET", key] ++ ids)
     |> Enum.map(&decode/1)
+  end
+
+  @doc """
+  Recieves a csv file with 'id,term' on each line,
+  and process and insert them as `[term, id, {id, term}]`.
+  """
+  def load_from_file(filename, base_key) do
+    filename
+    |> File.stream!()
+    |> Stream.map(fn x ->
+      [id, term] = String.split(x, ",")
+      [term, id, {id, term}]
+    end)
+    |> Auto.insert(base_key)
   end
 end
