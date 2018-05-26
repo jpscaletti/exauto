@@ -2,7 +2,8 @@
 
 A super fast Elixir in-memory autocomplete using Redis.
 
-It uses the technique described in the classic post by *antirez* “(Auto Complete with Redis)[http://oldblog.antirez.com/post/autocomplete-with-redis.html]” with one important improvement: you can find a text by any part of it, not just its prefix and not just the beginning of individual words.
+It uses the technique described in the classic post by *antirez* “[Auto Complete with Redis](http://oldblog.antirez.com/post/autocomplete-with-redis.html)
+” with one important improvement: you can find a text by any part of it, not just its prefix and not just the beginning of individual words.
 
 For example, the phrase “The Green Rainforest” can be found by searching for “forest”, “green”, “info”, “een”, “rest”, etc.
 
