@@ -1,0 +1,5 @@
+%{
+  "connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], [], "hexpm"},
+  "redix": {:hex, :redix, "0.7.1", "25a6c1c0d9b2d12a35aef759f9e49bd9bca00e0cd857ce766412f08fdda72163", [:mix], [{:connection, "~> 1.0", [hex: :connection, repo: "hexpm", optional: false]}], "hexpm"},
+  "slugify": {:hex, :slugify, "1.1.0", "945165e32c7ad22226c63101ac57a64d105fd4681d503c3302ae2c734a0e26ee", [:mix], [], "hexpm"},
+}
