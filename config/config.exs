@@ -21,6 +21,15 @@ use Mix.Config
 #     config :logger, level: :info
 #
 
+config :auto, ecto_repos: [Auto.Repo]
+
+config :auto, Auto.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  database: "exauto",
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost"
+
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.

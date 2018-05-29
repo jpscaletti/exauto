@@ -1,6 +1,6 @@
 defmodule AutoTest do
   use ExUnit.Case
-  doctest Auto
+  doctest Auto.Redis
 
   setup do
     Redix.command(:redix, ["FLUSHALL"])
@@ -11,7 +11,7 @@ defmodule AutoTest do
     base_key = "test:1"
     text = "The Rain"
     id = "123"
-    Auto.insert(base_key, text, id, {id, text})
+    Auto.Redis.insert(base_key, text, id, {id, text})
 
     assert 1 == Redix.command!(:redix, ["EXISTS", base_key])
 
@@ -34,7 +34,7 @@ defmodule AutoTest do
     text = "The Rain"
     id = "123"
     data = {id, text}
-    Auto.insert(base_key, text, id, data)
+    Auto.Redis.insert(base_key, text, id, data)
 
     assert [id] == Redix.command!(:redix, ["ZRANGE", "#{base_key}:th", "0", "-1"])
 
@@ -50,7 +50,7 @@ defmodule AutoTest do
       ["Rainman", 2, :data2],
       ["Mission Impossible", 3, :data3]
     ]
-    |> Auto.insert(base_key)
+    |> Auto.Redis.insert(base_key)
 
     assert Redix.command!(:redix, ["EXISTS", base_key, "1"])
     assert Redix.command!(:redix, ["EXISTS", base_key, "2"])
@@ -65,7 +65,7 @@ defmodule AutoTest do
       ["Rainman", 2, :data2],
       ["Mission Impossible", 3, :data3]
     ])
-    |> Auto.insert(base_key)
+    |> Auto.Redis.insert(base_key)
 
     assert Redix.command!(:redix, ["EXISTS", base_key, "1"])
     assert Redix.command!(:redix, ["EXISTS", base_key, "2"])
@@ -80,13 +80,13 @@ defmodule AutoTest do
       ["Rainman", 2, {2, "Rainman"}],
       ["The Rainforest", 3, {3, "The Rainforest"}]
     ]
-    |> Auto.insert(base_key)
+    |> Auto.Redis.insert(base_key)
 
-    assert Auto.match(base_key, "rain") |> Enum.count() == 3
-    assert Auto.match(base_key, "he") |> Enum.count() == 2
-    assert Auto.match(base_key, "forest") |> Enum.count() == 1
-    assert Auto.match(base_key, "man") |> Enum.count() == 1
-    assert Auto.match(base_key, "man") == [{2, "Rainman"}]
+    assert Auto.Redis.match(base_key, "rain") |> Enum.count() == 3
+    assert Auto.Redis.match(base_key, "he") |> Enum.count() == 2
+    assert Auto.Redis.match(base_key, "forest") |> Enum.count() == 1
+    assert Auto.Redis.match(base_key, "man") |> Enum.count() == 1
+    assert Auto.Redis.match(base_key, "man") == [{2, "Rainman"}]
   end
 
   test "multiple words matching" do
@@ -97,9 +97,9 @@ defmodule AutoTest do
       ["Rainman", 2, {2, "Rainman"}],
       ["The Rainforest", 3, {3, "The Rainforest"}]
     ]
-    |> Auto.insert(base_key)
+    |> Auto.Redis.insert(base_key)
 
-    assert Auto.match(base_key, "the forest") == [{3, "The Rainforest"}]
+    assert Auto.Redis.match(base_key, "the forest") == [{3, "The Rainforest"}]
   end
 
   test "ignore short words, match the rest" do
@@ -110,8 +110,8 @@ defmodule AutoTest do
       ["Rainman", 2, {2, "Rainman"}],
       ["The Rainforest", 3, {3, "The Rainforest"}]
     ]
-    |> Auto.insert(base_key)
+    |> Auto.Redis.insert(base_key)
 
-    assert Auto.match(base_key, "e i man o") |> Enum.count() == 1
+    assert Auto.Redis.match(base_key, "e i man o") |> Enum.count() == 1
   end
 end

@@ -6,9 +6,12 @@ defmodule Auto.Application do
   use Application
 
   def start(_type, _args) do
+    import Supervisor.Spec
+
     # List all child processes to be supervised
     children = [
-      {Redix, [[], [name: :redix]]}
+      {Redix, [[], [name: :redix]]},
+      supervisor(Auto.Repo, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

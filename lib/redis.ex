@@ -1,21 +1,9 @@
-defmodule Auto do
+defmodule Auto.Redis do
+  alias Auto.Utils
+
   @min_length 2
   @cache_time 600
   @chunk_every 100
-
-  defp normalize(term) do
-    term
-    |> String.trim()
-    |> String.replace("_", " ")
-    |> String.replace("-", " ")
-    |> Slug.slugify(separator: " ")
-  end
-
-  defp split(term) do
-    term
-    |> String.split()
-    |> Enum.filter(fn term -> String.length(term) >= @min_length end)
-  end
 
   defp encode(data) do
     :erlang.term_to_binary(data)
@@ -27,44 +15,6 @@ defmodule Auto do
   defp decode(data) do
     :erlang.binary_to_term(data)
   end
-
-  @doc """
-  Find all the possible slices of a term of at least `@min_length` characters.
-
-  This'll allow us to find the term by any part of it, not just the prefix.
-
-  ## Examples
-      iex> Auto.slice_and_dice("aliens")
-      ["al", "li", "ie", "en", "ns", "ali", "lie", "ien", "ens",
-      "alie", "lien", "iens", "alien", "liens", "aliens"]
-  """
-  def slice_and_dice(term, acc \\ [], wsize \\ @min_length) do
-    cond do
-      wsize <= String.length(term) ->
-        slice_and_dice(
-          term,
-          dice(term, acc, wsize),
-          wsize + 1
-        )
-
-      true ->
-        acc
-    end
-  end
-
-  defp dice(term, acc, wsize, start \\ 0) do
-    sub = String.slice(term, start, wsize)
-
-    cond do
-      String.length(sub) >= wsize ->
-        dice(term, acc ++ [sub], wsize, start + 1)
-
-      true ->
-        acc
-    end
-  end
-
-  # ---------------------------------------------------------------------------
 
   @doc """
   Process and insert terms from a stream or an enumerable of terms with the
@@ -93,8 +43,8 @@ defmodule Auto do
 
   defp insert_cmds(base_key, [text, id, data], acc \\ []) do
     text
-    |> normalize
-    |> split
+    |> Utils.normalize()
+    |> Utils.split()
     |> insert_term_cmds(base_key, id, acc)
     |> Enum.concat([["HSET", base_key, id, encode(data)]])
   end
@@ -104,7 +54,7 @@ defmodule Auto do
   defp insert_term_cmds([term | rest], key, id, acc) do
     acc =
       term
-      |> slice_and_dice
+      |> Utils.slice_and_dice()
       |> Enum.filter(fn x -> String.length(x) >= @min_length end)
       |> Enum.map(fn prefix -> ["ZADD", "#{key}:#{prefix}", "0", id] end)
       |> Enum.concat(acc)
@@ -115,7 +65,7 @@ defmodule Auto do
   # ---------------------------------------------------------------------------
 
   def match(base_key, term) do
-    terms = term |> normalize |> split
+    terms = term |> Utils.normalize() |> Utils.split()
 
     case Enum.count(terms) do
       0 -> []
@@ -166,6 +116,6 @@ defmodule Auto do
       [id, term] = String.split(x, ",")
       [term, id, {id, term}]
     end)
-    |> Auto.insert(base_key)
+    |> insert(base_key)
   end
 end

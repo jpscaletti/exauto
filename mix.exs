@@ -23,7 +23,11 @@ defmodule Auto.MixProject do
   defp deps do
     [
       {:redix, ">= 0.0.0"},
-      {:slugify, "~> 1.1"}
+      {:slugify, "~> 1.1"},
+      {:ecto, "~> 2.0"},
+      {:postgrex, ">= 0.0.0"},
+      {:benchwarmer, "~> 0.0.2"},
+      {:ex_doc, ">= 0.0.0", only: :dev}
     ]
   end
 end
