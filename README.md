@@ -1,6 +1,6 @@
 # exAuto
 
-**NOTE:** This is fully functional but I was testing the concept. I still don't really know if anyone should use it instead of something like a search engine.
+> **NOTE:** This is fully functional but I was testing the concept. I still don't really know if anyone should use it instead of something like a search engine.
 
 A super fast Elixir in-memory autocomplete using Redis.
 
